@@ -275,15 +275,13 @@ def _torch_binary_scalar_type(scalar, tensor):
 
 
 @op(torch.ops.aten.searchsorted.Tensor)
-def _aten_searchsorted(sorted_sequence, values):
-  mappings.t2j_dtype(torch.get_default_dtype())
-  res = jnp.searchsorted(sorted_sequence, values)
-  if sorted_sequence.dtype == np.dtype(np.int32) or sorted_sequence.dtype == np.dtype(
-    np.int32
-  ):
-    # res = res.astype(new_dtype)
-    res = res.astype(np.dtype(np.int64))
-  return res  # jnp.searchsorted(sorted_sequence, values)
+def _aten_searchsorted(
+  sorted_sequence, values, *, out_int32=False, right=False, side=None, sorter=None
+):
+  _side = side if side is not None else ("right" if right else "left")
+  res = jnp.searchsorted(sorted_sequence, values, side=_side, sorter=sorter)
+  return_type = jnp.int32 if out_int32 else jnp.int64
+  return res.astype(return_type)
 
 
 @op(torch.ops.aten.sub.Tensor)
